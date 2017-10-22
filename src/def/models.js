@@ -8,6 +8,8 @@ const WritableProperty = require(`../class/WritableProperty`);
 const ORG_MODEL = 'ORG';
 const APP_MODEL = 'APP';
 const ENV_MODEL = 'ENV';
+const O2P_MODEL = 'O2PROVIDER';
+const O2L_MODEL = 'O2LOGIN';
 const USER_MODEL = 'USER';
 const MEMBER_MODEL = 'MEMBER';
 
@@ -75,6 +77,46 @@ function registerModels (models) {
       new IdProperty('app_id'),
       new WritableProperty('name', '"production"'),
       new WritableProperty('title', '"Production Environment"')
+    ],
+  });
+
+  models.register({
+    id:               O2P_MODEL,
+    parentId:         ENV_MODEL,
+
+    uriSingularName:  'o2provider',
+    uriPluralName:    'o2providers',
+    uriIdName:        'o2provider_id',
+
+    properties: [
+      new IdProperty('app_id'),
+      new IdProperty('env_id'),
+      new WritableProperty('client_id', '"3TcHGmBWMd62ADY9ZSf8EY/TQAm3L/2DkLDH8DgDrVg="'),
+      new WritableProperty('client_secret', '"QhADX78wxPUEyivWGspAcBCJ+Ak1K+fFN+nCrFYPTpA8/gjg9okVNkPNCfomw8yyWNQMHAejB18eyYRqwNWTQg=="'),
+      new WritableProperty('authz_url', '"https://api.localhsot/authorize"'),
+      new WritableProperty('access_token_url', '"https://api.localhost/token"'),
+      new WritableProperty('enabled', 'true')
+    ],
+  });
+
+  models.register({
+    id:               O2L_MODEL,
+    parentId:         O2P_MODEL,
+
+    uriSingularName:  'o2login',
+    uriPluralName:    'o2logins',
+    uriIdName:        'o2login_id',
+
+    properties: [
+      new IdProperty('app_id'),
+      new IdProperty('env_id'),
+      new IdProperty('user_id'),
+      new IdProperty('o2provider_id'),
+      new WritableProperty('access_token', '"6AUppHObLuqBNSU9iaoWSSwMFjoh39x53DAYaTE60O9dzeoDTcN54YFsJEa3QZ9CSw6cenkEH7hyfy8ZEwVEXQ=="'),
+      new WritableProperty('token_type', '"bearer"'),
+      new WritableProperty('expires_in', '3600'),
+      new WritableProperty('scopes', '[]'),
+      new WritableProperty('foreign_id', '12345567876543312')
     ],
   });
 

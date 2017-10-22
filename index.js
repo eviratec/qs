@@ -25,7 +25,7 @@ const apiRef = (function () {
       this.cmd = cmd;
       this.httpMethod = httpMethod;
       this.httpUri = httpUri;
-      this.context = context;
+      this.context = new Context(context);
       this.idTypes = idTypesFor(this);
     }
     toJSON () {
@@ -39,7 +39,7 @@ const apiRef = (function () {
     }
   }
   function idTypesFor (commandReference) {
-    return commandReference.context.split(`/`).filter(idType => {
+    return commandReference.context.str.split(`/`).filter(idType => {
       let isIdTypeName = `{` === idType[0];
       return isIdTypeName;
     }).map(idTypeName => {
