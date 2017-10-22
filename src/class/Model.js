@@ -35,8 +35,16 @@ module.exports = class Model {
     return this.list.allWithParentId(this.id);
   }
 
+  get context () {
+    return '/' + ( this.hasParent && this.getParent().getUriFormat() || '' );
+  }
+
+  get hasParent () {
+    return null !== this.parentId;
+  }
+
   getParent () {
-    return null !== this.parentId &&
+    return this.hasParent &&
       this.list.byId(this.parentId);
   }
 

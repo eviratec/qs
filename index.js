@@ -21,18 +21,37 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 
 const apiRef = (function () {
   class CommandReference {
-    constructor (cmd, httpMethod, httpUri) {
+    constructor (cmd, httpMethod, httpUri, context) {
       this.cmd = cmd;
       this.httpMethod = httpMethod;
       this.httpUri = httpUri;
+      this.context = context;
+      this.idTypes = idTypesFor(this);
     }
+    toJSON () {
+      return {
+        cmd: cmd,
+        httpMethod: httpMethod,
+        httpUri: httpUri,
+        context: context,
+        idTypes: idTypes
+      }
+    }
+  }
+  function idTypesFor (commandReference) {
+    return commandReference.context.split(`/`).filter(idType => {
+      let isIdTypeName = `{` === idType[0];
+      return isIdTypeName;
+    }).map(idTypeName => {
+      return idTypeName.substr(1, idTypeName.length-2)
+    });
   }
   class ApiReference {
     constructor () {
       this.commands = [];
     }
-    define (cmd, httpMethod, httpUri) {
-      let definition = new CommandReference(cmd, httpMethod, httpUri);
+    define (cmd, httpMethod, httpUri, context) {
+      let definition = new CommandReference(cmd, httpMethod, httpUri, context);
       this.commands.push(definition);
       console.log(definition);
     }
@@ -52,24 +71,28 @@ models.forEach(model => {
     cmdId = model.parentId.toLowerCase() + '_' + cmdId;
   }
 
-  apiRef.define(`get_${cmdId}_list`, `get`, pluralUri);
+  apiRef.define(`get_${cmdId}_list`, `get`, pluralUri, model.context);
   app.get(pluralUri, (req, res, next) => {
-    res.send(200, $cmd(req, { command: `get_${cmdId}_list` }));
+    let d = $cmd(req, { command: `get_${cmdId}_list` });
+    res.send(200, d);
   });
 
-  apiRef.define(`create_${cmdId}`, `post`, pluralUri);
+  apiRef.define(`create_${cmdId}`, `post`, pluralUri, model.context);
   app.post(pluralUri, (req, res, next) => {
-    res.send(200, $cmd(req, { command: `create_${cmdId}` }));
+    let d = $cmd(req, { command: `create_${cmdId}`, newModel: req.body });
+    res.send(200, d);
   });
 
-  apiRef.define(`get_${cmdId}`, `get`, singularUri);
+  apiRef.define(`get_${cmdId}`, `get`, singularUri, model.context);
   app.get(singularUri, (req, res, next) => {
-    res.send(200, $cmd(req, { command: `get_${cmdId}` }));
+    let d = $cmd(req, { command: `get_${cmdId}` });
+    res.send(200, d);
   });
 
-  apiRef.define(`delete_${cmdId}`, `delete`, singularUri);
+  apiRef.define(`delete_${cmdId}`, `delete`, singularUri, model.context);
   app.delete(singularUri, (req, res, next) => {
-    res.send(200, $cmd(req, { command: `delete_${cmdId}` }));
+    let d = $cmd(req, { command: `delete_${cmdId}` });
+    res.send(200, d);
   });
 
   model.subModels.forEach(subModel => {
@@ -81,10 +104,11 @@ models.forEach(model => {
       let _uri = `${singularUri}/${subModel.uriPluralName}`;
       let _cmd = `get_${_cmdId}_list`;
 
-      apiRef.define(_cmd, `get`, _uri);
+      apiRef.define(_cmd, `get`, _uri, model.context);
 
       app.get(_uri, (req, res, next) => {
-        res.send(200, $cmd(req, { command: _cmd }));
+        let d = $cmd(req, { command: _cmd });
+        res.send(200, d);
       });
     }
 
@@ -92,10 +116,11 @@ models.forEach(model => {
       let _uri = `${singularUri}/${subModel.uriPluralName}`;
       let _cmd = `create_${_cmdId}`;
 
-      apiRef.define(_cmd, `post`, _uri);
+      apiRef.define(_cmd, `post`, _uri, model.context);
 
       app.post(_uri, (req, res, next) => {
-        res.send(200, $cmd(req, { command: _cmd }));
+        let d = $cmd(req, { command: _cmd, newModel: req.body });
+        res.send(200, d);
       });
     }
 
@@ -121,10 +146,11 @@ models.forEach(model => {
     let propertyUri = new Uri(`${singularUri.str}/${property.name}`);
     let cmd = `set_${model.id.toLowerCase()}_${property}`;
 
-    apiRef.define(cmd, `put`, propertyUri);
+    apiRef.define(cmd, `put`, propertyUri, model.context);
 
     app.put(propertyUri, (req, res, next) => {
-      res.send(200, $cmd(req, { command: cmd, newValue: req.body }));
+      let d = $cmd(req, { command: cmd, newValue: req.body[0] });
+      res.send(200, d);
     });
 
   });
